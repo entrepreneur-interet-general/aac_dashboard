@@ -17,3 +17,6 @@ tests/.cache/
 *.log
 *.db
 *.pyc
+*.csv
+*.xlsx
+*.sqlite
