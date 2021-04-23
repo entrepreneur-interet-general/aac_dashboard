@@ -1,10 +1,12 @@
 # Editors
 **/__pycache__/
-# exclude all PyCharm stuff but keep all shared run configurations
+# exclude all PyCharm/VSCode stuff but keep all shared run configurations
 # See here for this pattern: https://stackoverflow.com/a/5534865
 !/.idea/
 /.idea/*
 !/.idea/runConfigurations/
+/.vscode/
+/.vscode/settings.json
 
 # pytest
 .cache/
