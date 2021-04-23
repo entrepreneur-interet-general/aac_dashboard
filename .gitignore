@@ -5,6 +5,7 @@
 !/.idea/
 /.idea/*
 !/.idea/runConfigurations/
+/.vscode/
 
 # pytest
 .cache/
