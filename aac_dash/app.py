@@ -88,7 +88,7 @@ def create_content():
                                     "x": [1, 2, 3],
                                     "y": [2, 4, 5],
                                     "type": "bar",
-                                    "name": u"Montréal",
+                                    "name": "Montréal",
                                 },
                             ],
                             "layout": {"title": "Dash Data Visualization"},
@@ -150,7 +150,8 @@ def create_footer():
     )
     a_fa = html.A(
         children=[
-            html.I([], className="fa fa-font-awesome fa-2x"), html.Span("Font Awesome")
+            html.I([], className="fa fa-font-awesome fa-2x"),
+            html.Span("Font Awesome"),
         ],
         style={"text-decoration": "none"},
         href="http://fontawesome.io/",
