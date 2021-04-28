@@ -11,12 +11,15 @@ import dash_table
 import plotly.graph_objects as go 
 import plotly.express as px
 
+### Styling
 
 external_stylesheets = [dbc.themes.LUX]
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
-###########
+
+########### DataFrames
+
 from plotly.subplots import make_subplots
 
 #df = pd.read_csv('/Users/raph/Documents/Etalab/AAC_AAP/aac_dashboard/data/raw/applications.csv')
@@ -28,17 +31,18 @@ c = conn.cursor()
 df2 = pd.read_sql("SELECT Email, Civilité, Nom, Prénom FROM application_tab_0", conn)
 
 
+
 ### Filters
 jobfilters = dbc.Form(
     [
         dbc.FormGroup(
             [
                 dbc.Label("Je souhaite évaluer une candidature de...", html_for="example-radios-row", width=2),
-                dbc.FormText(
-                    "Sélectionnez un ou plusieurs profils",
-                    style = {"margin-left": "20px"},
-                    color="secondary",
-                ),
+                # dbc.FormText(
+                #     "Sélectionnez un ou plusieurs profils",
+                #     style = {"margin-left": "15px"},
+                #     color="secondary",
+                # ),
                 html.Br(),
                 dbc.Col(
                     dcc.Checklist(
@@ -61,7 +65,7 @@ jobfilters = dbc.Form(
 
 
 
-####### Hierarchical treemaps
+####### Hierarchical treemaps for test dataset
 df = pd.read_csv('https://raw.githubusercontent.com/plotly/datasets/master/sales_success.csv')
 levels = ['salesperson', 'county', 'region'] # levels used for the hierarchical chart
 color_columns = ['sales', 'calls']
@@ -126,14 +130,11 @@ fig.add_trace(go.Treemap(
 
 fig.update_layout(margin=dict(t=10, b=10, r=10, l=10))
 
+
+
 #### Setting up the modal
 evaluation = dbc.Row(
     [
-    dbc.Col([
-        
-        dbc.Table.from_dataframe(df2, striped=True, bordered=True, hover=True),
-        ], align = 'left', width = 3),
-
     dbc.Col([
         html.H3(
             children='Evaluation'
@@ -320,7 +321,7 @@ evaluation = dbc.Row(
             inputStyle={"margin-right": "10px", "margin-left": "10px"},
             labelStyle={'display': 'inline-block'}
             ) 
-    ], align = 'right')
+    ], align = 'right',)
     ])
 
 modal = html.Div(
@@ -330,7 +331,7 @@ modal = html.Div(
         dbc.Modal([
             dbc.ModalHeader("Evaluation de la candidature"),
             dbc.ModalBody(
-                evaluation
+                #evaluation
             ),
             dbc.ModalFooter(
                 dbc.Button("Fermer", id="close", className="ml-auto")
@@ -349,11 +350,12 @@ modal = html.Div(
 )
 
 
-### Testing here the alert feature:
+### Testing the alert feature:
 alert = dbc.Alert("Attention, vos changements n'ont pas été enregistrés !", color="danger", dismissable = True)
 
-#############
 
+
+#############
 
 app.layout = html.Div([
     dbc.Card(
@@ -378,6 +380,8 @@ app.layout = html.Div([
                         "Candidature de .......", 
                         className="card-title"
                         ),
+                    dbc.Table.from_dataframe(df2, striped=True, bordered=True, hover=True),
+                    
                     html.P("Draws fields from SQL for a given candidate"),
                     dbc.Button(
                         "Sélectionner une autre candidature",
@@ -386,6 +390,7 @@ app.layout = html.Div([
                         ),
                         modal,
                 ], width=5, align='left'),
+                dbc.Col([evaluation]),
                 # dbc.Col([
                 #     html.H3(
                 #         children='Evaluation'
