@@ -22,7 +22,6 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 from plotly.subplots import make_subplots
 
-#df = pd.read_csv('/Users/raph/Documents/Etalab/AAC_AAP/aac_dashboard/data/raw/applications.csv')
 PAGE_SIZE=15
 
 conn = sqlite3.connect('./data/sql/raw_data.sqlite')
@@ -30,39 +29,96 @@ c = conn.cursor()
 
 df2 = pd.read_sql("SELECT Email, Civilité, Nom, Prénom FROM application_tab_0", conn)
 
+df3 = pd.read_sql("SELECT * FROM application_tab_0 LIMIT 1 OFFSET 6;", conn).transpose()
 
+
+#### Titles
+title = dbc.Card(
+        dbc.CardBody(
+            [
+                dbc.Row([
+                    dbc.Col([
+                        html.H1(children='Evaluation des candidatures EIG 5',
+                        style = {'textAlign' : 'center'}
+                    )], width=9)
+                ], justify='center')
+            ]
+        ), color = 'light',        
+)
+
+evaltitle = dbc.Card(
+        dbc.CardBody(
+            [
+                dbc.Row([
+                    dbc.Col([
+                        html.H3(children='Evaluation',
+                        style = {'textAlign' : 'center'}
+                    )], width=9)
+                ], justify='center')
+            ]
+        ), color = 'light',        
+)
+
+tabletitle = dbc.Card(
+        dbc.CardBody(
+            [
+                dbc.Row([
+                    dbc.Col([
+                        html.H3(children='Aperçu des candidatures',
+                        style = {'textAlign' : 'center'}
+                    )], width=9)
+                ], justify='center')
+            ]
+        ), color = 'light',        
+)
+
+statstitle = dbc.Card(
+        dbc.CardBody(
+            [
+                dbc.Row([
+                    dbc.Col([
+                        html.H3(children='Statistiques et Graphiques',
+                        style = {'textAlign' : 'center'}
+                    )], width=9)
+                ], justify='center')
+            ]
+        ), color = 'light',        
+)
 
 ### Filters
 jobfilters = dbc.Form(
     [
         dbc.FormGroup(
             [
-                dbc.Label("Je souhaite évaluer une candidature de...", html_for="example-radios-row", width=2),
-                # dbc.FormText(
-                #     "Sélectionnez un ou plusieurs profils",
-                #     style = {"margin-left": "15px"},
-                #     color="secondary",
-                # ),
+                dbc.Label("Je souhaite évaluer une candidature...", 
+                    html_for="jobs-row",
+                    style = {"margin-left": "15px"},
+                ),
+                dbc.FormText(
+                    "Sélectionnez un ou plusieurs profils",
+                    style = {"font-style":'italic', "margin-left": "15px"},
+                    color="secondary",
+                ),
                 html.Br(),
                 dbc.Col(
                     dcc.Checklist(
-                        id="example-radios-row",
+                        id="jobs-row",
                         options=[
                             {"label": "Data Scientist", "value": 1},
                             {"label": "Dev", "value": 2},
                             {"label": "Designer", "value": 3},
+                            {"label": "Juriste", "value": 4},
+                            {"label": "Autre", "value": 5},
                         ],
                         inputStyle={"margin-right": "10px", "margin-left": "10px"},
                         labelStyle={'display': 'inline-block'},
                     ),
                     width=10,
-                ),
-               
-            ],
-    row=False,   
+                ),      
+            ],  
+        )
+    ]
 )
-])
-
 
 
 ####### Hierarchical treemaps for test dataset
@@ -131,202 +187,256 @@ fig.add_trace(go.Treemap(
 fig.update_layout(margin=dict(t=10, b=10, r=10, l=10))
 
 
+#### Evaluation form
 
-#### Setting up the modal
-evaluation = dbc.Row(
+evaluation = dbc.Col(
     [
-    dbc.Col([
-        html.H3(
-            children='Evaluation'
-            ),
-        
-        dcc.Markdown(
-            '''
-            Pour compléter votre évaluation de la candidature, veuillez remplir chacun des champs ci-dessous.
-
-            La grille d'évaluation complète est disponible **ici**, n'hésitez pas à la consulter !'''
-        ),
-
-        html.Br(),
-
-        html.Div(id="the_alert", children=[]),
-
-        dcc.Markdown(
-            "**Compétences techniques** *(compétences métier et clarté dans la communication, degré d'expérience...)*"
-        ),
-
-        dbc.InputGroup(
+        dbc.Form(
             [
-                dbc.InputGroupAddon("Compétences techniques", addon_type="prepend"),
-                dbc.Textarea(),
-            ],
-            className="mb-3",
-            id="competences-techniques-appreciation"
-        ),
-        
-        dbc.Row([
-            dbc.Col([
-                dbc.Label(  
-                    "Score (1 = non qualifié, 5 = expert) :"
-                )], align='left'),
-            
-            dbc.Col([
-                dcc.RadioItems(
-                    id = 'competences-techniques-score',
-                    options=[
-                        {'label': '1', 'value': '1'},
-                        {'label': '2', 'value': '2'},
-                        {'label': '3', 'value': '3'},
-                        {'label': '4', 'value': '4'},
-                        {'label': '5', 'value': '5'}
-                    ],
-                    inputStyle={"margin-right": "10px", "margin-left": "10px"},
-                    labelStyle={'display': 'inline-block'}
-                )]),
-        ]),
-        
-        dcc.Markdown(
-            "**Capacité à travailler en équipe-projet au sein d’un environnement administratif** *(mener un projet de bout en bout, travailler en équipe interdisciplinaire, s'adapter à la culture de l'administration d'accueil...)*"
-        ),
+                dbc.FormGroup(
+                    [
+                        html.H5(
+                            children='évaluation',
+                            className='card-title'
+                            ),
+                        
+                        dcc.Markdown(
+                            '''
+                            Pour compléter votre évaluation de la candidature, veuillez remplir chacun des champs ci-dessous.
 
-        dbc.InputGroup(
-            [
-                dbc.InputGroupAddon("Travail d'équipe", addon_type="prepend"),
-                dbc.Textarea(),
-            ],
-            className="mb-3",
-            id="travail-equipe-appreciation"
-        ),
+                            La grille d'évaluation complète est disponible **ici**, n'hésitez pas à la consulter !'''
+                        ),
+                        html.Br(),
 
-        dbc.Row([
-            dbc.Col([
-                dbc.Label(  
-                    "Score (1 = non qualifié, 5 = expert) :"
-                )], align='left'),
-            
-            dbc.Col([
-                dcc.RadioItems(
-                    id = 'travail-equipe-score',
-                    options=[
-                        {'label': '1', 'value': '1'},
-                        {'label': '2', 'value': '2'},
-                        {'label': '3', 'value': '3'},
-                        {'label': '4', 'value': '4'},
-                        {'label': '5', 'value': '5'}
-                    ],
-                    inputStyle={"margin-right": "10px", "margin-left": "10px"},
-                    labelStyle={'display': 'inline-block'}
-                )]),
-        ]),
-        
-        dcc.Markdown(
-            "**Esprit EIG ** *(engagement pour l'intérêt général, motivation, apport souhaité auprès de la communauté...)*"
-        ),
+                        html.Div(id="the_alert", children=[]),
+                    ]
+                ),
 
-        dbc.InputGroup(
-            [
-                dbc.InputGroupAddon("Esprit EIG", addon_type="prepend"),
-                dbc.Textarea(),
-            ],
-            className="mb-3",
-            id="esprit-eig-appreciation"
-        ),
-        
-        dbc.Row([
-            dbc.Col([
-                dbc.Label(  
-                    "Score (1 = non qualifié, 5 = expert) :"
-                )], align='left'),
-            
-            dbc.Col([
-                dcc.RadioItems(
-                    id = 'esprit-eig-score',
-                    options=[
-                        {'label': '1', 'value': '1'},
-                        {'label': '2', 'value': '2'},
-                        {'label': '3', 'value': '3'},
-                        {'label': '4', 'value': '4'},
-                        {'label': '5', 'value': '5'}
-                    ],
-                    inputStyle={"margin-right": "10px", "margin-left": "10px"},
-                    labelStyle={'display': 'inline-block'}
-                )]),
-        ]),
-        
-        dcc.Markdown(
-            "**Impression générale** *(Points forts et points faibles de la candidature)*"
-        ),
+                dbc.FormGroup(
+                    [
+                        dcc.Markdown(
+                            "**Compétences techniques** *(compétences métier et clarté dans la communication, degré d'expérience...)*"
+                        ),
 
-        dbc.InputGroup(
-            [
-                dbc.InputGroupAddon("Impression générale", addon_type="prepend"),
-                dbc.Textarea(),
-            ],
-            className="mb-3",
-        ),
-        
-        dcc.Markdown(
-            "**Coup de coeur ?** *(Cochez cette case si cette candidature vous impressionne)*"
-        ),
-        
-        dcc.Checklist(
-            id="coup-de-coeur", 
-            options=[
-                {'label': 'Coup de coeur', 'value': '1'}
-            ],
-            inputStyle={"margin-right": "10px", "margin-left": "10px"}
-            ),
-        
-        dcc.Markdown(
-            "**Priorisation de la candidature :**"
-        ),
+                        dbc.InputGroup(
+                            [
+                                dbc.InputGroupAddon("Compétences techniques", addon_type="prepend"),
+                                dbc.Textarea(),
+                            ],
+                            className="mb-3",
+                            id="competences-techniques-appreciation"
+                        ),
+                        
+                        dbc.Row([
+                            dbc.Col([
+                                dbc.Label(  
+                                    "Score (1 = non qualifié, 5 = expert) :"
+                                )], align='left'),
+                            
+                            dbc.Col([
+                                dcc.RadioItems(
+                                    id = 'competences-techniques-score',
+                                    options=[
+                                        {'label': '1', 'value': '1'},
+                                        {'label': '2', 'value': '2'},
+                                        {'label': '3', 'value': '3'},
+                                        {'label': '4', 'value': '4'},
+                                        {'label': '5', 'value': '5'}
+                                    ],
+                                    inputStyle={"margin-right": "10px", "margin-left": "10px"},
+                                    labelStyle={'display': 'inline-block'}
+                                )]),
+                                html.Br(),
+                        ]),
+                    ],  
+                ),
 
-        dcc.RadioItems(
-            id = 'priorite-candidature',
-            options=[
-                {'label': 'Profils prioritaires', 'value': '1'},
-                {'label': 'Profils satisfaisants', 'value': '2'},
-                {'label': 'Profils non recommandés', 'value': '3'}
-            ],
-            inputStyle={"margin-right": "10px", "margin-left": "10px"},
-            labelStyle={'display': 'inline-block'}
-            ),
-        
-        dcc.Markdown(
-            "**Statut de la candidature :** "
-        ),
+                dbc.FormGroup(
+                    [
+                        dcc.Markdown(
+                            "**Capacité à travailler en équipe-projet au sein d’un environnement administratif** *(mener un projet de bout en bout, travailler en équipe interdisciplinaire, s'adapter à la culture de l'administration d'accueil...)*"
+                        ),
 
-        dcc.RadioItems(
-            id = 'statut-candidature',
-            options=[
-                {'label': 'Admissible au jury', 'value': '1'},
-                {'label': 'En cours de discussion', 'value': '2'},
-                {'label': 'Non retenu', 'value': '3'}
-            ],
-            inputStyle={"margin-right": "10px", "margin-left": "10px"},
-            labelStyle={'display': 'inline-block'}
-            ),
-        
-        dcc.Markdown(
-            "**Communication / Echanges en cours :**"
-        ),
+                        dbc.InputGroup(
+                            [
+                                dbc.InputGroupAddon("Travail d'équipe", addon_type="prepend"),
+                                dbc.Textarea(),
+                            ],
+                            className="mb-3",
+                            id="travail-equipe-appreciation"
+                        ),
 
-        dcc.RadioItems(
-            id = 'communication-candidature',
-            options=[
-                {'label': 'Invitation aux jurys envoyée', 'value': '1'},
-                {'label': 'Mail de refus envoyé', 'value': '2'},
-                {'label': 'Réponse à faire', 'value': '3'}
-            ],
-            inputStyle={"margin-right": "10px", "margin-left": "10px"},
-            labelStyle={'display': 'inline-block'}
-            ) 
-    ], align = 'right',)
-    ])
+                        dbc.Row([
+                            dbc.Col([
+                                dbc.Label(  
+                                    "Score (1 = non qualifié, 5 = expert) :"
+                                )], align='left'),
+                            
+                            dbc.Col([
+                                dcc.RadioItems(
+                                    id = 'travail-equipe-score',
+                                    options=[
+                                        {'label': '1', 'value': '1'},
+                                        {'label': '2', 'value': '2'},
+                                        {'label': '3', 'value': '3'},
+                                        {'label': '4', 'value': '4'},
+                                        {'label': '5', 'value': '5'}
+                                    ],
+                                    inputStyle={"margin-right": "10px", "margin-left": "10px"},
+                                    labelStyle={'display': 'inline-block'}
+                                )]),
+                        ]),
+                        
+                        html.Br(),
+                    ]
+                ),
+
+                dbc.FormGroup(
+                    [
+                        dcc.Markdown(
+                            "**Esprit EIG ** *(engagement pour l'intérêt général, motivation, apport souhaité auprès de la communauté...)*"
+                        ),
+
+                        dbc.InputGroup(
+                            [
+                                dbc.InputGroupAddon("Esprit EIG", addon_type="prepend"),
+                                dbc.Textarea(),
+                            ],
+                            className="mb-3",
+                            id="esprit-eig-appreciation"
+                        ),
+                        
+                        dbc.Row([
+                            dbc.Col([
+                                dbc.Label(  
+                                    "Score (1 = non qualifié, 5 = expert) :"
+                                )], align='left'),
+                            
+                            dbc.Col([
+                                dcc.RadioItems(
+                                    id = 'esprit-eig-score',
+                                    options=[
+                                        {'label': '1', 'value': '1'},
+                                        {'label': '2', 'value': '2'},
+                                        {'label': '3', 'value': '3'},
+                                        {'label': '4', 'value': '4'},
+                                        {'label': '5', 'value': '5'}
+                                    ],
+                                    inputStyle={"margin-right": "10px", "margin-left": "10px"},
+                                    labelStyle={'display': 'inline-block'}
+                                )]),
+                        ]),
+                        
+                        html.Br(),
+                   ]
+                ),
+
+                dbc.FormGroup(
+                    [
+                        dcc.Markdown(
+                            "**Impression générale** *(Points forts et points faibles de la candidature)*"
+                        ),
+
+                        dbc.InputGroup(
+                            [
+                                dbc.InputGroupAddon("Impression générale", addon_type="prepend"),
+                                dbc.Textarea(),
+                            ],
+                            className="mb-3",
+                        ),
+                        
+                        html.Br(),
+
+                        dcc.Markdown(
+                            "**Coup de coeur ?** *(Cochez cette case si cette candidature vous impressionne)*"
+                        ),
+                        
+                        dcc.Checklist(
+                            id="coup-de-coeur", 
+                            options=[
+                                {'label': 'Coup de coeur', 'value': '1'}
+                            ],
+                            inputStyle={"margin-right": "10px", "margin-left": "10px"}
+                            ),
+                        
+                        html.Br(),
+                   ]
+                ),
+
+                dbc.FormGroup(
+                    [                        
+                        dcc.Markdown(
+                            "**Priorisation de la candidature :**"
+                        ),
+
+                        dcc.RadioItems(
+                            id = 'priorite-candidature',
+                            options=[
+                                {'label': 'Profils prioritaires', 'value': '1'},
+                                {'label': 'Profils satisfaisants', 'value': '2'},
+                                {'label': 'Profils non recommandés', 'value': '3'}
+                            ],
+                            inputStyle={"margin-right": "10px", "margin-left": "10px"},
+                            labelStyle={'display': 'inline-block'}
+                            ),
+                        
+                        html.Br(),
+                   ]
+                ),
+
+                dbc.FormGroup(
+                    [
+                        dcc.Markdown(
+                            "**Statut de la candidature :** "
+                        ),
+
+                        dcc.RadioItems(
+                            id = 'statut-candidature',
+                            options=[
+                                {'label': 'Admissible au jury', 'value': '1'},
+                                {'label': 'En cours de discussion', 'value': '2'},
+                                {'label': 'Non retenu', 'value': '3'}
+                            ],
+                            inputStyle={"margin-right": "10px", "margin-left": "10px"},
+                            labelStyle={'display': 'inline-block'}
+                            ),
+                        
+                        html.Br(),
+                   ]
+                ),
+
+                dbc.FormGroup(
+                    [                        
+                        dcc.Markdown(
+                            "**Communication / Echanges en cours :**"
+                        ),
+
+                        dcc.RadioItems(
+                            id = 'communication-candidature',
+                            options=[
+                                {'label': 'Invitation aux jurys envoyée', 'value': '1'},
+                                {'label': 'Mail de refus envoyé', 'value': '2'},
+                                {'label': 'Réponse à faire', 'value': '3'}
+                            ],
+                            inputStyle={"margin-right": "10px", "margin-left": "10px"},
+                            labelStyle={'display': 'inline-block'}
+                            )
+                    ]
+                ),
+            ]),
+        ], align = 'right',
+)
+
+
+#### Modal
 
 modal = html.Div(
     [
-        dbc.Button("Evaluer", id="open"),
+        dbc.Button(
+                                "Sélectionner une autre candidature",
+                                id = "open",
+                                color="primary"
+                                ),
 
         dbc.Modal([
             dbc.ModalHeader("Evaluation de la candidature"),
@@ -351,237 +461,65 @@ modal = html.Div(
 
 
 ### Testing the alert feature:
-alert = dbc.Alert("Attention, vos changements n'ont pas été enregistrés !", color="danger", dismissable = True)
+# alert = dbc.Alert("Attention, vos changements n'ont pas été enregistrés !", color="danger", dismissable = True)
 
+### Evaluation
 
-
-#############
-
-app.layout = html.Div([
-    dbc.Card(
-        dbc.CardBody([
-            dbc.Row([
-                dbc.Col([
-                    html.H1(children='Evaluation des candidatures EIG 5',
-                    style = {'textAlign' : 'center'}
-                )], width=9)
-            ], justify='center')
-        ]), color = 'light'),
-            
+tab1 = html.Div([
+    
     html.Br(),
+
     jobfilters,
+
     html.Br(),  
+    
     dbc.Card(
         dbc.CardBody([
-            dbc.Row([
-                
-                dbc.Col([
-                    html.H5(
-                        "Candidature de .......", 
-                        className="card-title"
-                        ),
-                    dbc.Table.from_dataframe(df2, striped=True, bordered=True, hover=True),
-                    
-                    html.P("Draws fields from SQL for a given candidate"),
-                    dbc.Button(
-                        "Sélectionner une autre candidature",
-                        id = "next-candidate",
-                        color="primary"
-                        ),
-                        modal,
-                ], width=5, align='left'),
-                dbc.Col([evaluation]),
-                # dbc.Col([
-                #     html.H3(
-                #         children='Evaluation'
-                #         ),
-                    
-                #     dcc.Markdown(
-                #         '''
-                #         Pour compléter votre évaluation de la candidature, veuillez remplir chacun des champs ci-dessous.
-
-                #         La grille d'évaluation complète est disponible **ici**, n'hésitez pas à la consulter !'''
-                #     ),
-
-                #     html.Br(),
-
-                #     #html.Div(id="the_alert", children=[]),
-
-                #     dcc.Markdown(
-                #         "**Compétences techniques** *(compétences métier et clarté dans la communication, degré d'expérience...)*"
-                #     ),
-
-                #     dbc.InputGroup(
-                #         [
-                #             dbc.InputGroupAddon("Compétences techniques", addon_type="prepend"),
-                #             dbc.Textarea(),
-                #         ],
-                #         className="mb-3",
-                #         id="competences-techniques-appreciation"
-                #     ),
-                    
-                #     dbc.Row([
-                #         dbc.Col([
-                #             dbc.Label(  
-                #                 "Score (1 = non qualifié, 5 = expert) :"
-                #             )], align='left'),
-                        
-                #         dbc.Col([
-                #             dcc.RadioItems(
-                #                 id = 'competences-techniques-score',
-                #                 options=[
-                #                     {'label': '1', 'value': '1'},
-                #                     {'label': '2', 'value': '2'},
-                #                     {'label': '3', 'value': '3'},
-                #                     {'label': '4', 'value': '4'},
-                #                     {'label': '5', 'value': '5'}
-                #                 ],
-                #                 inputStyle={"margin-right": "10px", "margin-left": "10px"},
-                #                 labelStyle={'display': 'inline-block'}
-                #             )]),
-                #     ]),
-                    
-                #     dcc.Markdown(
-                #         "**Capacité à travailler en équipe-projet au sein d’un environnement administratif** *(mener un projet de bout en bout, travailler en équipe interdisciplinaire, s'adapter à la culture de l'administration d'accueil...)*"
-                #     ),
-
-                #     dbc.InputGroup(
-                #         [
-                #             dbc.InputGroupAddon("Travail d'équipe", addon_type="prepend"),
-                #             dbc.Textarea(),
-                #         ],
-                #         className="mb-3",
-                #         id="travail-equipe-appreciation"
-                #     ),
-
-                #     dbc.Row([
-                #         dbc.Col([
-                #             dbc.Label(  
-                #                 "Score (1 = non qualifié, 5 = expert) :"
-                #             )], align='left'),
-                        
-                #         dbc.Col([
-                #             dcc.RadioItems(
-                #                 id = 'travail-equipe-score',
-                #                 options=[
-                #                     {'label': '1', 'value': '1'},
-                #                     {'label': '2', 'value': '2'},
-                #                     {'label': '3', 'value': '3'},
-                #                     {'label': '4', 'value': '4'},
-                #                     {'label': '5', 'value': '5'}
-                #                 ],
-                #                 inputStyle={"margin-right": "10px", "margin-left": "10px"},
-                #                 labelStyle={'display': 'inline-block'}
-                #             )]),
-                #     ]),
-                    
-                #     dcc.Markdown(
-                #         "**Esprit EIG ** *(engagement pour l'intérêt général, motivation, apport souhaité auprès de la communauté...)*"
-                #     ),
-
-                #     dbc.InputGroup(
-                #         [
-                #             dbc.InputGroupAddon("Esprit EIG", addon_type="prepend"),
-                #             dbc.Textarea(),
-                #         ],
-                #         className="mb-3",
-                #         id="esprit-eig-appreciation"
-                #     ),
-                    
-                #     dbc.Row([
-                #         dbc.Col([
-                #             dbc.Label(  
-                #                 "Score (1 = non qualifié, 5 = expert) :"
-                #             )], align='left'),
-                        
-                #         dbc.Col([
-                #             dcc.RadioItems(
-                #                 id = 'esprit-eig-score',
-                #                 options=[
-                #                     {'label': '1', 'value': '1'},
-                #                     {'label': '2', 'value': '2'},
-                #                     {'label': '3', 'value': '3'},
-                #                     {'label': '4', 'value': '4'},
-                #                     {'label': '5', 'value': '5'}
-                #                 ],
-                #                 inputStyle={"margin-right": "10px", "margin-left": "10px"},
-                #                 labelStyle={'display': 'inline-block'}
-                #             )]),
-                #     ]),
-                    
-                #     dcc.Markdown(
-                #         "**Impression générale** *(Points forts et points faibles de la candidature)*"
-                #     ),
-
-                #     dbc.InputGroup(
-                #         [
-                #             dbc.InputGroupAddon("Impression générale", addon_type="prepend"),
-                #             dbc.Textarea(),
-                #         ],
-                #         className="mb-3",
-                #     ),
-                    
-                #     dcc.Markdown(
-                #         "**Coup de coeur ?** *(Cochez cette case si cette candidature vous impressionne)*"
-                #     ),
-                    
-                #     dcc.Checklist(
-                #         id="coup-de-coeur", 
-                #         options=[
-                #             {'label': 'Coup de coeur', 'value': '1'}
-                #         ],
-                #         inputStyle={"margin-right": "10px", "margin-left": "10px"}
-                #         ),
-                    
-                #     dcc.Markdown(
-                #         "**Priorisation de la candidature :**"
-                #     ),
-
-                #     dcc.RadioItems(
-                #         id = 'priorite-candidature',
-                #         options=[
-                #             {'label': 'Profils prioritaires', 'value': '1'},
-                #             {'label': 'Profils satisfaisants', 'value': '2'},
-                #             {'label': 'Profils non recommandés', 'value': '3'}
-                #         ],
-                #         inputStyle={"margin-right": "10px", "margin-left": "10px"},
-                #         labelStyle={'display': 'inline-block'}
-                #         ),
-                    
-                #     dcc.Markdown(
-                #         "**Statut de la candidature :** "
-                #     ),
-
-                #     dcc.RadioItems(
-                #         id = 'statut-candidature',
-                #         options=[
-                #             {'label': 'Admissible au jury', 'value': '1'},
-                #             {'label': 'En cours de discussion', 'value': '2'},
-                #             {'label': 'Non retenu', 'value': '3'}
-                #         ],
-                #         inputStyle={"margin-right": "10px", "margin-left": "10px"},
-                #         labelStyle={'display': 'inline-block'}
-                #         ),
-                    
-                #     dcc.Markdown(
-                #         "**Communication / Echanges en cours :**"
-                #     ),
-
-                #     dcc.RadioItems(
-                #         id = 'communication-candidature',
-                #         options=[
-                #             {'label': 'Invitation aux jurys envoyée', 'value': '1'},
-                #             {'label': 'Mail de refus envoyé', 'value': '2'},
-                #             {'label': 'Réponse à faire', 'value': '3'}
-                #         ],
-                #         inputStyle={"margin-right": "10px", "margin-left": "10px"},
-                #         labelStyle={'display': 'inline-block'}
-                #         ) 
-                # ], width=7),
-            ], align='right'), 
+            dbc.Row(
+                [
+                    dbc.Col(
+                        [
+                            html.H5(
+                                "Candidature à évaluer", 
+                                className="card-title"
+                                ),
+                            
+                            html.P("Draws fields from SQL for a given candidate"),
+                            modal,
+                            dbc.Table.from_dataframe(df3, striped=True, bordered=True, hover=True),
+                        ], width=6, align='left'
+                    ),
+                    dbc.Col(
+                        [
+                            evaluation
+                        ], width=6, align='right'
+                    ),
+                ], align='right'
+            ), 
             
             html.Br(),
-            
+                
+        ]), color = 'light'
+    )
+])
+
+
+### Tabs
+
+tab1_content = dbc.Card(
+    dbc.CardBody(
+        [
+            evaltitle,
+            tab1,
+        ]
+    ),
+    className="mt-3",
+)
+
+tab2_content = dbc.Card(
+    dbc.CardBody(
+        [
+            tabletitle,
             dbc.Row([
                 dbc.Col([
                     dash_table.DataTable(
@@ -598,13 +536,41 @@ app.layout = html.Div([
                         sort_mode="multi"
                         ),
                 ], width=12),
-                dbc.Col([
-                    dcc.Graph(figure=fig)
-                ], width=12),
-            ], justify='center'),      
-        ]), color = 'light'
-    )
-])
+            ], justify='center'),
+        ]
+    ),
+    className="mt-3",
+)
+
+tab3_content = dbc.Card(
+    dbc.CardBody(
+        [
+            statstitle,
+            dcc.Graph(figure=fig),
+        ]
+    ),
+    className="mt-3",
+)
+
+tabs = dbc.Tabs(
+    [
+        dbc.Tab(tab1_content, label="Evaluation"),
+        dbc.Tab(tab2_content, label="Aperçu complet des candidatures"),
+        dbc.Tab(tab3_content, label="Statistiques & Graphiques"),
+    ]
+)
+
+
+######## Layout
+
+app.layout = html.Div(
+    [
+        title,
+        tabs
+    ]
+)
+
+
 
 
 
