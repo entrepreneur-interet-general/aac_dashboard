@@ -29,34 +29,55 @@ PAGE_SIZE = 15
 conn = sqlite3.connect("./data/sql/raw_data.sqlite")
 c = conn.cursor()
 
-df2 = pd.read_sql("SELECT Email, Civilité, Nom, Prénom FROM application_tab_0", conn)
+df2 = pd.read_sql("SELECT Email, Civilité, Nom, Prénom, 'Quelle qualification vous correspond le mieux ?' FROM application_tab_0", conn)
 
 # TODO: copy title of columns into a row and always query that row + candidate. Maybe import SQL with row name empty > use the first row
 df3 = pd.read_sql("SELECT * FROM application_tab_0 LIMIT 1 OFFSET 6;", conn).transpose(copy='True')
 
 
 #### Titles
-title = dbc.Card(
-    dbc.CardBody(
-        [
-            dbc.Row(
-                [
-                    dbc.Col(
-                        [
-                            html.H1(
-                                children="Evaluation des candidatures EIG 5",
-                                style={"textAlign": "center"},
-                            )
-                        ],
-                        width=9,
-                    )
-                ],
-                justify="center",
-            )
-        ]
-    ),
-    color="light",
+# title = dbc.Card(
+#     dbc.CardBody(
+#         [
+#             dbc.Row(
+#                 [
+#                     dbc.Col(
+#                         [
+#                             html.H1(
+#                                 children="Evaluation des candidatures EIG 5",
+#                                 style={"textAlign": "center"},
+#                             )
+#                         ],
+#                         width=9,
+#                     )
+#                 ],
+#                 justify="center",
+#             )
+#         ]
+#     ),
+#     color="light",
+# )
+
+title = dbc.Row(
+    [
+        dbc.Col(
+            [
+                html.Br(),
+                html.Br(),
+                html.H1(
+                    children="Evaluation des candidatures EIG 5",
+                    style={"textAlign": "center"},
+                ),
+                html.Br(),
+                html.Br(),
+                html.Br(),
+            ],
+            width=9,
+        )
+    ],
+    justify="center",
 )
+
 
 evaltitle = dbc.Card(
     dbc.CardBody(
@@ -64,7 +85,12 @@ evaltitle = dbc.Card(
             dbc.Row(
                 [
                     dbc.Col(
-                        [html.H3(children="Evaluation", style={"textAlign": "center"})],
+                        [
+                            html.H3(
+                                children="Evaluation", 
+                                style={"textAlign": "center"}
+                                ),
+                        ],
                         width=9,
                     )
                 ],
@@ -614,6 +640,11 @@ tab1 = html.Div(
             ]
         ),
         html.Br(),
+        dbc.Button(
+            "Voir le CV", id="cv-button", color="info",
+            external_link=True,
+            href='https://static.demarches-simplifiees.fr/v1/AUTH_db3cbfc79c914f87b192ff7c6bb176f0/ds_activestorage_backup/5rjph7ji0o5pqk3pknb1nvtu95ai?temp_url_sig=c76065e4647de57f52e72f88ab6a4fae9c8da9c3&temp_url_expires=1620165883&filename=CV_Charles_Maupou_FR_Low.pdf&inline' #TODO: make dynamic link
+        ),
         dbc.Card(
             dbc.CardBody(
                 [
@@ -673,19 +704,21 @@ tab2_content = dbc.Card(
                 [
                     dbc.Col(
                         [
-                            dash_table.DataTable(
-                                id="data-table",
-                                columns=[{"name": i, "id": i} for i in df2.columns],
-                                data=df2.to_dict("records"),
-                                style_table={
-                                    "width": "100%",
-                                    "minWidth": "100%",
-                                },
-                                page_size=PAGE_SIZE,
-                                filter_action="native",
-                                sort_action="native",
-                                sort_mode="multi",
-                            ),
+                            dcc.Interval(id='interval_pg', interval=86400000*7, n_intervals=0),
+                            html.Div(id='sqlite-db'),
+                            # dash_table.DataTable(
+                            #     id="data-table",
+                            #     columns=[{"name": i, "id": i} for i in df2.columns],
+                            #     data=df2.to_dict("records"),
+                            #     style_table={
+                            #         "width": "100%",
+                            #         "minWidth": "100%",
+                            #     },
+                            #     page_size=PAGE_SIZE,
+                            #     filter_action="native",
+                            #     sort_action="native",
+                            #     sort_mode="multi",
+                            # ),
                         ],
                         width=12,
                     ),
@@ -718,10 +751,39 @@ tabs = dbc.Tabs(
 
 ######## Layout
 
-app.layout = html.Div([title, tabs])
+app.layout = html.Div(
+    [
+        title,
+        tabs
+    ]
+)
 
 
 ################# CALLBACKS
+
+### Tab 2 Table
+
+@app.callback(Output('sqlite-db', 'children'),
+              [Input('interval_pg', 'n_intervals')])
+def populate_datatable(n_intervals):
+    conn = sqlite3.connect("./data/sql/raw_data.sqlite")
+    c = conn.cursor()
+    df2 = pd.read_sql("SELECT Email, Civilité, Nom, Prénom, 'Quelle qualification vous correspond le mieux ? ' FROM application_tab_0", conn)
+    return [
+        dash_table.DataTable(
+            id="data-table",
+            columns=[{"name": i, "id": i} for i in df2.columns],
+            data=df2.to_dict("records"),
+            style_table={
+                "width": "100%",
+                "minWidth": "100%",
+            },
+            page_size=PAGE_SIZE,
+            filter_action="native",
+            sort_action="native",
+            sort_mode="multi",
+        ),
+    ]
 
 
 ### testing a callback that pops the Alert when Next candidate button is clicked
