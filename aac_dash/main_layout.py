@@ -10,12 +10,14 @@ import dash_html_components as html
 import dash_table
 import plotly.graph_objects as go
 import plotly.express as px
+import dash_auth
 
 ### Styling
 
 external_stylesheets = [dbc.themes.LUX]
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+
 
 
 ########### DataFrames
@@ -29,7 +31,8 @@ c = conn.cursor()
 
 df2 = pd.read_sql("SELECT Email, Civilité, Nom, Prénom FROM application_tab_0", conn)
 
-df3 = pd.read_sql("SELECT * FROM application_tab_0 LIMIT 1 OFFSET 6;", conn).transpose()
+# TODO: copy title of columns into a row and always query that row + candidate. Maybe import SQL with row name empty > use the first row
+df3 = pd.read_sql("SELECT * FROM application_tab_0 LIMIT 1 OFFSET 6;", conn).transpose(copy='True')
 
 
 #### Titles
@@ -116,7 +119,47 @@ statstitle = dbc.Card(
     color="light",
 )
 
-### Filters
+
+### First row: Job filters + dropdown of jury 
+
+
+jury = dbc.Form(
+    [
+        dbc.FormGroup(
+            [
+                dbc.Col(
+                    [
+                        dbc.Label(
+                            "Je suis :",
+                            html_for = "jury-dropdown",
+                            color="info",
+                            style={"margin-left": "15px", "font-size":"large"}
+                        ),
+                        dbc.FormText(
+                            "Si votre nom ne figure pas dans le menu, contactez Raphaëlle qui vous ajoutera",
+                            style={"font-style": "italic", "margin-left": "15px"},
+                            color="secondary",
+                        ),
+                        html.Br(),
+                        dcc.Dropdown(
+                            id='jury-dropdown',
+                            options=[
+                                {'label': 'Coline Malivel', 'value': 'Coline Malivel'},
+                                {'label': 'Soizic Penicaud', 'value': 'Soizic Penicaud'},
+                                {'label': 'Raphaëlle Roffo', 'value': 'Raphaëlle Roffo'}
+                            ],
+                            style={"margin-right": "10px", "margin-left": "10px"},
+                            placeholder = 'Sélectionnez votre nom',
+                            persistence = True
+                        )
+                    ]
+                )
+            ]
+        )
+    ]
+)
+    
+
 jobfilters = dbc.Form(
     [
         dbc.FormGroup(
@@ -124,7 +167,8 @@ jobfilters = dbc.Form(
                 dbc.Label(
                     "Je souhaite évaluer une candidature...",
                     html_for="jobs-row",
-                    style={"margin-left": "15px"},
+                    color="info",
+                    style={"margin-left": "15px", "font-size":"large"},
                 ),
                 dbc.FormText(
                     "Sélectionnez un ou plusieurs profils",
@@ -132,26 +176,65 @@ jobfilters = dbc.Form(
                     color="secondary",
                 ),
                 html.Br(),
-                dbc.Col(
-                    dcc.Checklist(
-                        id="jobs-row",
-                        options=[
-                            {"label": "Data Scientist", "value": 1},
-                            {"label": "Dev", "value": 2},
-                            {"label": "Designer", "value": 3},
-                            {"label": "Juriste", "value": 4},
-                            {"label": "Autre", "value": 5},
-                        ],
-                        inputStyle={"margin-right": "10px", "margin-left": "10px"},
-                        labelStyle={"display": "inline-block"},
-                    ),
-                    width=10,
-                ),
+                dbc.Row(
+                    [
+                        dbc.Col(
+                            [
+                                dcc.Checklist(
+                                    id="jobs-row",
+                                    options=[
+                                        {"label": "Data Scientist", "value": 1},
+                                        {"label": "Dev", "value": 2},
+                                        {"label": "Designer", "value": 3},
+                                        {"label": "Juriste", "value": 4},
+                                        {"label": "Autre", "value": 5},
+                                    ],
+                                    inputStyle={"margin-right": "10px", "margin-left": "10px"},
+                                    labelStyle={"display": "inline-block"},
+                                    persistence=True,
+                                ),
+                                
+                                html.Br(),
+                                
+                                dbc.Button(
+                                    "Evaluer une candidature", 
+                                    id="pick-evaluation", 
+                                    color="info", 
+                                    style={"margin-right": "10px", "margin-left": "10px"})
+                                
+                            ],
+                        ),
+                    ],
+                )
             ],
         )
     ]
 )
 
+
+toprow = dbc.Card(
+    dbc.CardBody(
+        [
+            dbc.Row(
+                [
+                    dbc.Col(
+                        [
+                            jury,
+                        ],
+                    ),
+                    dbc.Col(
+                        [
+                            jobfilters,
+                        ],
+                    )
+                ],
+                justify="center",
+            )
+        ]
+    ),
+    color="info",
+    outline=True,
+)
 
 ####### Hierarchical treemaps for test dataset
 df = pd.read_csv(
@@ -270,7 +353,7 @@ evaluation = dbc.Col(
                                 dbc.Textarea(),
                             ],
                             className="mb-3",
-                            id="competences-techniques-appreciation",
+                            id="competences-techniques-appreciation"
                         ),
                         dbc.Row(
                             [
@@ -415,6 +498,7 @@ evaluation = dbc.Col(
                                 dbc.Textarea(),
                             ],
                             className="mb-3",
+                            id='impression-generale'
                         ),
                         html.Br(),
                         dcc.Markdown(
@@ -434,9 +518,9 @@ evaluation = dbc.Col(
                         dcc.RadioItems(
                             id="priorite-candidature",
                             options=[
-                                {"label": "Profils prioritaires", "value": "1"},
-                                {"label": "Profils satisfaisants", "value": "2"},
-                                {"label": "Profils non recommandés", "value": "3"},
+                                {"label": "Profil prioritaire", "value": "1"},
+                                {"label": "Profil satisfaisant", "value": "2"},
+                                {"label": "Profil non recommandé", "value": "3"},
                             ],
                             inputStyle={"margin-right": "10px", "margin-left": "10px"},
                             labelStyle={"display": "inline-block"},
@@ -475,6 +559,12 @@ evaluation = dbc.Col(
                         ),
                     ]
                 ),
+                html.Br(),
+                dbc.Button(
+                    "Enregistrer mon évaluation", 
+                    id="save-eval", 
+                    color="info",
+                    ),
             ]
         ),
     ],
@@ -486,7 +576,7 @@ evaluation = dbc.Col(
 
 modal = html.Div(
     [
-        dbc.Button("Sélectionner une autre candidature", id="open", color="primary"),
+        dbc.Button("Sélectionner une autre candidature", id="open", color="info"),
         dbc.Modal(
             [
                 dbc.ModalHeader("Evaluation de la candidature"),
@@ -515,7 +605,14 @@ modal = html.Div(
 tab1 = html.Div(
     [
         html.Br(),
-        jobfilters,
+        dbc.Row(
+            [
+                dbc.Col(
+                    toprow,
+                    width={"size": 8, "offset": 2},
+                )
+            ]
+        ),
         html.Br(),
         dbc.Card(
             dbc.CardBody(
@@ -528,9 +625,14 @@ tab1 = html.Div(
                                         "Candidature à évaluer", className="card-title"
                                     ),
                                     html.P(
-                                        "Draws fields from SQL for a given candidate"
+                                        """
+                                        Voici une des candidatures qui restent à évaluer. 
+                                        Vous pouvez aussi choisir de sélectionner un autre profil si vous le 
+                                        souhaitez en cliquant sur le bouton ci-dessous
+                                        """
                                     ),
                                     modal,
+                                    html.Br(),
                                     dbc.Table.from_dataframe(
                                         df3, striped=True, bordered=True, hover=True
                                     ),
@@ -619,7 +721,7 @@ tabs = dbc.Tabs(
 app.layout = html.Div([title, tabs])
 
 
-#################
+################# CALLBACKS
 
 
 ### testing a callback that pops the Alert when Next candidate button is clicked
@@ -632,6 +734,14 @@ app.layout = html.Div([title, tabs])
 #         return alert
 #     return not alert
 
+### Callback to write into SQL from the evaluation module
+
+### Callback to get a random new candidate when pressing the button
+
+### Callback to click on an applicant in the table and then get their dossier pulled
+
+
+### TODO: CV en pdf - how to handle it, download all? contacted Démarches Simplifiées pour ça
 
 if __name__ == "__main__":
     app.run_server(debug=True)
