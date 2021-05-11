@@ -1168,7 +1168,6 @@ def populate_datatable(n_intervals):
                 "whiteSpace": "no-wrap",
                 "overflow": "hidden",
                 "height": "auto",
-                # all three widths are needed
             },
             style_data_conditional=[
                 {
@@ -1186,6 +1185,8 @@ def populate_datatable(n_intervals):
             sort_mode="multi",
         ),
     ]
+
+# TODO: refactor code!
 
 
 ### Callback: Tab 2-bis:  EY Table
@@ -1242,7 +1243,6 @@ def populate_datatable(n_intervals):
                 {
                     "if": {"filter_query": '{ey_classification} contains "POTENTIEL"'},
                     "backgroundColor": "#dbf2e3",
-                    #'color': 'white'
                 },
                 {
                     "if": {"filter_query": '{ey_classification} contains "NON RETENU"'},
@@ -1332,14 +1332,6 @@ def create_charts(n_intervals):
     df_overview = df_overview.sort_values(
         by=["Moyenne", "Dossier N°"], ascending=False, na_position="last"
     )
-
-    pie_chart = px.pie(
-        data_frame=df_overview,
-        names="Métier",
-        values="Average",
-        color_discrete_sequence=px.colors.sequential.Plasma_r,
-        title="Moyenne des évaluations, par métier",
-    )
     histo_metiers = px.histogram(
         df_overview,
         x="Métier",
@@ -1349,7 +1341,6 @@ def create_charts(n_intervals):
             "Madame": "#bc8f8f",
             "Je préfère ne pas répondre": "#008080",
         },
-        # color_discrete_sequence= px.colors.sequential.Plasma_r,
         title="Civilité des candidats par métier",
     )
 
