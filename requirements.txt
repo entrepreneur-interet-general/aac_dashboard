@@ -61,4 +61,5 @@ ua-parser==0.10.0
 urllib3==1.26.4
 Werkzeug==1.0.1
 xlrd==2.0.1
+xlsxwriter==1.4.3
 yarg==0.1.9
